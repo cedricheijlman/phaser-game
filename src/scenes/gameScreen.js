@@ -20,12 +20,18 @@ export default class gameScreen extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     this.cursors = this.input.keyboard.createCursorKeys();
+    this.input.keyboard.on("keyup", (e) => {
+      if (e.key == "ArrowUp") {
+        this.shootBullet();
+      }
+    });
   }
 
-  createFunction() {
+  shootBullet() {
     this.bullet = this.physics.add
-      .image(this.player.x, this.player.y, "bullet")
-      .setDisplaySize(60, 60);
+      .image(this.player.x, this.player.y - 30, "bullet")
+      .setDisplaySize(60, 60)
+      .setVelocityY(-330).rotation += -190;
   }
 
   update() {
@@ -34,10 +40,6 @@ export default class gameScreen extends Phaser.Scene {
       this.player.setVelocityX(-400);
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(400);
-    }
-
-    if (this.cursors.up.isDown) {
-      this.createFunction();
     }
   }
 }
