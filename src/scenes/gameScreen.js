@@ -96,6 +96,18 @@ export default class gameScreen extends Phaser.Scene {
         this.shootBullet();
       }
     });
+
+    function collectStar(e) {
+      console.log(e);
+    }
+
+    this.physics.add.overlap(
+      this.laserGroup,
+      this.enemy,
+      collectStar,
+      null,
+      this
+    );
   }
 
   shootBullet() {
