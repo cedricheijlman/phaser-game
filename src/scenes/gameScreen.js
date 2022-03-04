@@ -3,9 +3,58 @@ import plane from "../assets/plane.png";
 import bullet from "../assets/17.png";
 import enemySpriteSheet from "../assets/2.jpg";
 
+class Laser extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, x, y) {
+    super(scene, x, y, "bullet").setDisplaySize(30, 30);
+  }
+
+  fire(x, y) {
+    this.body.reset(x, y);
+
+    this.setActive(true);
+    this.setVisible(true);
+    this.setDisplaySize(30, 50);
+    this.setBodySize(60, 90);
+    this.setVelocityY(-230).rotation += -190;
+  }
+
+  preUpdate(time, delta) {
+    super.preUpdate(time, delta);
+
+    if (this.y <= 0) {
+      this.setActive(false);
+      this.setVisible(false);
+    }
+  }
+}
+
+class LaserGroup extends Phaser.Physics.Arcade.Group {
+  constructor(scene) {
+    super(scene.physics.world, scene);
+
+    this.createMultiple({
+      classType: Laser,
+      frameQuantity: 10,
+      active: false,
+      visible: false,
+      key: "bullet",
+    });
+  }
+
+  fireLaser(x, y) {
+    const laser = this.getFirstDead();
+
+    if (laser) {
+      laser.fire(x, y);
+    }
+  }
+}
+
 export default class gameScreen extends Phaser.Scene {
   constructor() {
     super();
+    this.player;
+    this.laserGroup;
   }
 
   preload() {
@@ -21,7 +70,6 @@ export default class gameScreen extends Phaser.Scene {
     this.player = this.physics.add.sprite(500, 700, "plane");
     this.player
       .setBodySize(500, 420)
-      .setCollideWorldBounds(true)
       .setDisplaySize(80, 80)
       .setOrigin(0.5, 0.5);
 
@@ -30,6 +78,8 @@ export default class gameScreen extends Phaser.Scene {
       .setCollideWorldBounds(true)
       .setDisplaySize(45, 45)
       .setVelocityY(150);
+
+    this.laserGroup = new LaserGroup(this);
 
     this.anims.create({
       key: "walk",
@@ -49,11 +99,7 @@ export default class gameScreen extends Phaser.Scene {
   }
 
   shootBullet() {
-    this.bullet = this.physics.add
-      .image(this.player.x, this.player.y - 30, "bullet")
-      .setDisplaySize(30, 50)
-      .setBodySize(60, 90)
-      .setVelocityY(-330).rotation += -190;
+    this.laserGroup.fireLaser(this.player.x, this.player.y - 20);
   }
 
   update() {
