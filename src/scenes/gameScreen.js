@@ -15,6 +15,7 @@ class Laser extends Phaser.Physics.Arcade.Sprite {
     this.setVisible(true);
     this.setDisplaySize(30, 50);
     this.setBodySize(60, 90);
+
     this.setVelocityY(-230).rotation += -190;
   }
 
@@ -36,6 +37,7 @@ class LaserGroup extends Phaser.Physics.Arcade.Group {
       classType: Laser,
       frameQuantity: 10,
       active: false,
+      disableBody: false,
       visible: false,
       key: "bullet",
     });
@@ -67,6 +69,22 @@ export default class gameScreen extends Phaser.Scene {
   }
 
   create() {
+    this.score = 0;
+    this.scoreText;
+    this.enemiesAlive = 10;
+    this.round = 0;
+    this.speed = 10;
+
+    this.scoreText = this.add.text(16, 16, "score: 0", {
+      fontSize: "32px",
+      fill: "#FFFFFF",
+    });
+
+    this.speedText = this.add.text(16, 50, "speed: " + this.speed, {
+      fontSize: "32px",
+      fill: "#FFFFFF",
+    });
+
     this.player = this.physics.add.sprite(500, 700, "plane");
     this.player
       .setBodySize(500, 420)
@@ -74,10 +92,11 @@ export default class gameScreen extends Phaser.Scene {
       .setOrigin(0.5, 0.5)
       .setCollideWorldBounds(true);
 
-    this.enemy = this.physics.add
-      .sprite(240, 30, "enemy")
-      .setDisplaySize(45, 45)
-      .setVelocityY(150);
+    this.enemyGrunts = this.physics.add.group({
+      key: "enemy",
+      repeat: this.enemiesAlive - 1 + this.round,
+      setXY: { x: 180, y: 0, stepX: 60 },
+    });
 
     this.laserGroup = new LaserGroup(this);
 
@@ -88,7 +107,9 @@ export default class gameScreen extends Phaser.Scene {
       repeat: -1,
     });
 
-    this.enemy.play("walk");
+    this.enemyGrunts.children.iterate((child) => {
+      child.setVelocityY(this.speed).setDisplaySize(35, 35).play("walk");
+    });
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.input.keyboard.on("keyup", (e) => {
@@ -97,12 +118,28 @@ export default class gameScreen extends Phaser.Scene {
       }
     });
 
-    function hit(e) {
+    function hit(e, shot) {
       console.log("biem");
-      return this.enemy.setVisible(false).setActive(false);
+      this.score += 1;
+      this.enemiesAlive--;
+      this.speed += 1;
+
+      this.scoreText.setText("Score: " + this.score);
+
+      return shot.disableBody(true, true);
     }
 
-    this.physics.add.overlap(this.laserGroup, this.enemy, hit, null, this);
+    function endGame() {
+      this.scene.start("homeScreen");
+    }
+
+    this.physics.add.overlap(
+      this.laserGroup,
+      this.enemyGrunts,
+      hit,
+      null,
+      this
+    );
 
     this.rect = this.add.rectangle(
       this.player.x,
@@ -114,9 +151,14 @@ export default class gameScreen extends Phaser.Scene {
 
     this.physics.add.existing(this.rect);
 
-    this.physics.add.overlap(this.enemy, this.rect, hit, null, this);
-
-    this.physics.add.overlap(this.rect, this.enemy, hit, null, this);
+    this.physics.add.overlap(this.enemyGrunts, this.rect, endGame, null, this);
+    this.physics.add.overlap(
+      this.enemyGrunts,
+      this.player,
+      endGame,
+      null,
+      this
+    );
   }
 
   shootBullet() {
@@ -129,6 +171,18 @@ export default class gameScreen extends Phaser.Scene {
       this.player.setVelocityX(-400);
     } else if (this.cursors.right.isDown) {
       this.player.setVelocityX(400);
+    }
+    console.log(this.enemiesAlive);
+
+    if (this.enemiesAlive == 0) {
+      this.enemiesAlive = 10;
+      this.speedText.setText("speed: " + this.speed);
+      this.enemyGrunts.children.iterate((child) => {
+        child
+          .enableBody(true, child.x, 0, true, true)
+          .setVelocityY(this.speed)
+          .setDisplaySize(30, 30);
+      });
     }
   }
 }
