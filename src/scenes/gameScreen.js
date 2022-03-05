@@ -71,11 +71,11 @@ export default class gameScreen extends Phaser.Scene {
     this.player
       .setBodySize(500, 420)
       .setDisplaySize(80, 80)
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setCollideWorldBounds(true);
 
     this.enemy = this.physics.add
       .sprite(240, 30, "enemy")
-      .setCollideWorldBounds(true)
       .setDisplaySize(45, 45)
       .setVelocityY(150);
 
@@ -97,17 +97,26 @@ export default class gameScreen extends Phaser.Scene {
       }
     });
 
-    function collectStar(e) {
-      console.log(e);
+    function hit(e) {
+      this.enemy.setVisible(false).setActive(false);
+      console.log("biem");
     }
 
-    this.physics.add.overlap(
-      this.laserGroup,
-      this.enemy,
-      collectStar,
-      null,
-      this
+    this.physics.add.overlap(this.laserGroup, this.enemy, hit, null, this);
+
+    this.rect = this.add.rectangle(
+      this.player.x,
+      this.player.y + 110,
+      1000,
+      30,
+      0xff0000
     );
+
+    this.physics.add.existing(this.rect);
+
+    this.physics.add.overlap(this.enemy, this.rect, hit, null, this);
+
+    this.physics.add.overlap(this.rect, this.enemy, hit, null, this);
   }
 
   shootBullet() {
