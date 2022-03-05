@@ -130,7 +130,7 @@ export default class gameScreen extends Phaser.Scene {
     }
 
     function endGame() {
-      this.scene.start("homeScreen");
+      this.scene.start("endScene", { score: this.score });
     }
 
     this.physics.add.overlap(
