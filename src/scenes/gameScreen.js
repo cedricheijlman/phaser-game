@@ -98,8 +98,8 @@ export default class gameScreen extends Phaser.Scene {
     });
 
     function hit(e) {
-      this.enemy.setVisible(false).setActive(false);
       console.log("biem");
+      return this.enemy.setVisible(false).setActive(false);
     }
 
     this.physics.add.overlap(this.laserGroup, this.enemy, hit, null, this);
